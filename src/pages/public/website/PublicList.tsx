@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useOutletContext, Link, useLocation } from 'react-router-dom';
+import { useOutletContext, Link } from 'react-router-dom';
 import { TenantPublicProfile, CmsContent } from '../../../domains/website/types';
 import { websiteService } from '../../../domains/website/services/WebsiteService';
 
@@ -67,11 +67,11 @@ export default function PublicList({ profile, type }: { profile: TenantPublicPro
             {contents.map(item => (
               <Link key={item.id} to={`${basePath}/${detailPath}/${item.slug}`} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow group flex flex-col">
                 {item.featuredImage ? (
-                  <div className="h-56 overflow-hidden flex-shrink-0">
-                    <img src={item.featuredImage} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="aspect-[4/5] w-full overflow-hidden flex-shrink-0 bg-gray-100">
+                    <img src={item.featuredImage} alt={item.title} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
                   </div>
                 ) : (
-                  <div className="h-56 bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <div className="aspect-[4/5] w-full bg-gray-100 flex items-center justify-center flex-shrink-0">
                     <span className="text-gray-400">No Image</span>
                   </div>
                 )}
