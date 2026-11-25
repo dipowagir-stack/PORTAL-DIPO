@@ -59,14 +59,16 @@ export default function ProfileTab() {
     field: keyof TenantPublicProfile,
   ) => {
     if (!e.target.files || !e.target.files[0] || !activeTenant) return;
-    
+
     const file = e.target.files[0];
-    
+
     // Validasi Ukuran File (Maks 1MB)
     const MAX_SIZE = 1 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      alert("Ukuran file gambar melebihi batas 1MB. Silakan kompres gambar Anda terlebih dahulu.");
-      e.target.value = ''; // Reset input
+      alert(
+        "Ukuran file gambar melebihi batas 1MB. Silakan kompres gambar Anda terlebih dahulu.",
+      );
+      e.target.value = ""; // Reset input
       return;
     }
 
@@ -76,20 +78,18 @@ export default function ProfileTab() {
         const img = new Image();
         img.onload = () => {
           URL.revokeObjectURL(img.src);
-          if (field === 'heroImage') {
-            // Check if aspect ratio is roughly 16:9 or if it's too small
+          if (field === "heroImage") {
             if (img.width < 1280 || img.height < 720) {
-              alert("Dimensi gambar hero terlalu kecil. Rekomendasi minimal 1280x720px.");
+              alert(
+                "Dimensi gambar hero terlalu kecil. Rekomendasi minimal 1280x720px.",
+              );
               resolve(false);
               return;
             }
-          } else if (field === 'logoUrl' || field === 'faviconUrl') {
-            // Check if aspect ratio is roughly 1:1
+          } else if (field === "logoUrl" || field === "faviconUrl") {
             const ratio = img.width / img.height;
             if (ratio < 0.8 || ratio > 1.2) {
               alert("Dimensi gambar sebaiknya persegi (1:1).");
-              // We just warn for logo, not strictly block, or we can block
-              // Let's not strictly block, just let it pass but we could alert
             }
           }
           resolve(true);
@@ -104,26 +104,33 @@ export default function ProfileTab() {
 
     const isValidDimensions = await checkDimensions();
     if (!isValidDimensions) {
-      e.target.value = ''; // Reset input
+      e.target.value = ""; // Reset input
       return;
     }
 
     setUploadingField(field);
     try {
-      const res = await storageService.uploadDocument(
-        activeTenant.id,
-        file,
-        file.name,
-      );
-      if (res.isSuccess) {
-        setFormProfile((prev) => ({ ...prev, [field]: res.getValue() }));
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("tenantId", activeTenant.id);
+
+      const response = await fetch("https://dipowagir.sch.id/upload.php", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.status === "success") {
+        setFormProfile((prev) => ({ ...prev, [field]: result.url }));
       } else {
-        alert("Gagal mengupload gambar. Pastikan layanan Firebase Storage sudah aktif di Firebase Console.");
+        alert(result.message || "Gagal mengupload gambar ke server.");
       }
     } catch (error) {
-      alert("Terjadi kesalahan saat mengupload gambar.");
+      alert("Terjadi kesalahan koneksi saat mengupload gambar.");
     } finally {
       setUploadingField(null);
+      e.target.value = "";
     }
   };
 
