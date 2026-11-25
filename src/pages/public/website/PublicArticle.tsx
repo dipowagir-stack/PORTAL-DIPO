@@ -13,8 +13,6 @@ export default function PublicArticle({ profile, type }: { profile: TenantPublic
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
-    // Since we only have slug in URL, we fetch by slug for the active tenant.
-    // Ensure getPublicContentBySlug respects type if provided, though typically slug is unique enough.
     websiteService.getPublicContentBySlug(profile.tenantId, slug).then(res => {
       if (res.isSuccess) {
         setContent(res.getValue());
@@ -28,10 +26,24 @@ export default function PublicArticle({ profile, type }: { profile: TenantPublic
     });
   }, [profile.tenantId, slug, profile.schoolName]);
 
+  // Mengubah baris baru (Enter) menjadi tag HTML rapi jika konten berupa teks biasa
+  const formatContent = (raw: string) => {
+    if (!raw) return '';
+    // Jika sudah mengandung tag blok HTML (<p>, <div>, <h3>, <ul>, <ol>), tampilkan apa adanya
+    if (/<(p|div|h[1-6]|ul|ol|table|blockquote)\b/i.test(raw)) {
+      return raw;
+    }
+    // Jika berupa teks biasa, ubah enter ganda menjadi paragraf dan enter tunggal menjadi baris baru
+    return raw
+      .split(/\n\s*\n/)
+      .map(paragraph => `<p class="mb-4 leading-relaxed">${paragraph.trim().replace(/\n/g, '<br />')}</p>`)
+      .join('');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-         <div className="animate-spin h-10 w-10 border-4 border-gray-300 rounded-full border-t-blue-600" style={{ borderTopColor: profile.primaryColor }}></div>
+        <div className="animate-spin h-10 w-10 border-4 border-gray-300 rounded-full border-t-blue-600" style={{ borderTopColor: profile.primaryColor }}></div>
       </div>
     );
   }
@@ -54,34 +66,41 @@ export default function PublicArticle({ profile, type }: { profile: TenantPublic
   }
 
   return (
-    <article className="bg-white min-h-screen pb-24">
+    <article className="bg-gray-50 min-h-screen pb-24">
       {/* Article Header */}
-      <div className="bg-gray-900 text-white pt-20 pb-24 relative overflow-hidden">
+      <div className="bg-gray-900 text-white pt-16 pb-24 relative overflow-hidden">
         {content.featuredImage && (
           <div className="absolute inset-0">
-             <img src={content.featuredImage} alt={content.title} className="w-full h-full object-cover opacity-20" />
-             <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent" />
+            <img src={content.featuredImage} alt={content.title} className="w-full h-full object-cover opacity-25 blur-sm scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent" />
           </div>
         )}
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-          <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider mb-6 bg-white/20 backdrop-blur-sm">
+          <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider mb-5 bg-white/20 backdrop-blur-sm">
             {content.type === 'ARTICLE' ? 'BERITA' : content.type === 'PAGE' ? 'HALAMAN' : content.type}
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mb-6">
+          <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mb-5">
             {content.title}
           </h1>
           {content.publishedAt && (
-             <p className="text-gray-300 font-medium">
-               Dipublikasikan pada {new Date(content.publishedAt).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-             </p>
+            <p className="text-gray-300 font-medium text-sm md:text-base">
+              Dipublikasikan pada {new Date(content.publishedAt).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
           )}
         </div>
       </div>
 
       {/* Article Body */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-20">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 md:p-12 prose prose-lg max-w-none text-gray-700 prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-xl">
-          <div dangerouslySetInnerHTML={{ __html: content.content }} />
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-14 relative z-20">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          {content.featuredImage && (
+            <div className="w-full max-h-[420px] overflow-hidden bg-gray-100 border-b border-gray-100">
+              <img src={content.featuredImage} alt={content.title} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="p-6 sm:p-8 md:p-12 prose prose-lg max-w-none text-gray-700 prose-headings:text-gray-900 prose-headings:font-bold prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-xl">
+            <div dangerouslySetInnerHTML={{ __html: formatContent(content.content) }} />
+          </div>
         </div>
       </div>
     </article>
