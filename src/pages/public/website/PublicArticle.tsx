@@ -94,8 +94,8 @@ export default function PublicArticle({ profile, type }: { profile: TenantPublic
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-14 relative z-20">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {content.featuredImage && (
-            <div className="w-full max-h-[420px] overflow-hidden bg-gray-100 border-b border-gray-100">
-              <img src={content.featuredImage} alt={content.title} className="w-full h-full object-cover" />
+            <div className="w-full bg-gray-50 border-b border-gray-100 flex justify-center p-4 sm:p-6">
+              <img src={content.featuredImage} alt={content.title} className="w-full max-w-md h-auto rounded-xl shadow-sm" />
             </div>
           )}
           <div className="p-6 sm:p-8 md:p-12 prose prose-lg max-w-none text-gray-700 prose-headings:text-gray-900 prose-headings:font-bold prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-xl">
