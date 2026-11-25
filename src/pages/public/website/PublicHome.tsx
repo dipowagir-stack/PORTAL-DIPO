@@ -274,12 +274,12 @@ export default function PublicHome() {
                     to={`${basePath}/berita/${item.slug}`} 
                     className="group block"
                   >
-                    <div className="aspect-[4/3] bg-gray-200 overflow-hidden mb-6 relative">
+                    <div className="aspect-[4/5] bg-gray-200 overflow-hidden mb-6 relative">
                       {item.featuredImage ? (
                         <img 
                           src={item.featuredImage} 
                           alt={item.title} 
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                          className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" 
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -295,7 +295,7 @@ export default function PublicHome() {
                       {item.title}
                     </h3>
                     <p className="text-gray-600 line-clamp-2 text-base leading-relaxed">
-                      {item.summary || item.content.substring(0, 100)}...
+                      {item.summary || item.content.replace(/<[^>]*>?/gm, '').substring(0, 100)}...
                     </p>
                   </Link>
                 </motion.div>
