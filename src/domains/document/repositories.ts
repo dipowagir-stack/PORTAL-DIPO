@@ -1,5 +1,4 @@
 import { collection, doc, getDocs, getDoc, query, where, setDoc, addDoc, updateDoc, deleteDoc, QueryConstraint } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db } from '../../lib/firebase';
 import { BaseRepository } from '../../foundation/core/BaseRepository';
 import { virtualDatabase } from '../../foundation/sandbox/VirtualDatabase';
@@ -97,27 +96,34 @@ export class FirestoreRepository<T> implements BaseRepository<T> {
 }
 
 export class FirebaseStorageRepository {
-  private storage = getStorage();
-
   async uploadFile(path: string, file: File | Blob): Promise<string> {
     if (virtualDatabase.isActive()) {
       // In sandbox mode, return a safe data URL/blob representation without network write
       return URL.createObjectURL(file);
     }
-    const storageRef = ref(this.storage, path);
-    // Add a 15 second timeout to prevent indefinite freezing if Storage bucket is not enabled
-    await Promise.race([
-      uploadBytes(storageRef, file),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Storage upload timeout. Please ensure Firebase Storage is enabled in the Firebase Console.')), 15000))
-    ]);
-    return await getDownloadURL(storageRef);
+
+    const formData = new FormData();
+    const fileName = file instanceof File ? file.name : path.split('/').pop() || 'upload.png';
+    formData.append('file', file, fileName);
+
+    const response = await fetch('https://dipowagir.sch.id/upload.php', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || result.status !== 'success') {
+      throw new Error(result.message || 'Gagal mengupload file ke server hosting.');
+    }
+
+    return result.url;
   }
 
   async deleteFile(path: string): Promise<void> {
     if (virtualDatabase.isActive()) {
       return;
     }
-    const storageRef = ref(this.storage, path);
-    await deleteObject(storageRef);
+    console.info('Skip remote storage delete for:', path);
   }
 }
